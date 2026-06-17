@@ -43,6 +43,34 @@ This sample project demonstrates a simple DevOps portfolio app with:
 - Kubernetes manifests are under `k8s/`
 - Terraform config is under `terraform/main.tf`
 
+## Local automation scripts
+- `run.sh` — Bash entrypoint for Linux/macOS automation
+- `run.ps1` — PowerShell entrypoint for Windows automation
+
+### Usage examples
+- Initialize and install dependencies:
+  ```bash
+  ./run.sh init
+  . .venv/bin/activate
+  ```
+- Run tests:
+  ```bash
+  ./run.sh test
+  ```
+- Build Docker image:
+  ```bash
+  ./run.sh build-image
+  ```
+- Deploy Kubernetes manifests:
+  ```bash
+  ./run.sh deploy-k8s
+  ```
+- Run Terraform commands:
+  ```bash
+  ./run.sh terraform init
+  ./run.sh terraform apply
+  ```
+
 ## Troubleshooting
 - Use the GitHub Actions artifact `ci-logs` to inspect failure output.
 - Verify Docker Hub secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in repo settings.
