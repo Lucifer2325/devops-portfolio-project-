@@ -1,0 +1,62 @@
+name: CI/CD DevOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Prepare CI log file
+      run: |
+        echo "CI pipeline log for run $GITHUB_RUN_ID ($GITHUB_RUN_NUMBER)" > build.log
+        echo "Repository: $GITHUB_REPOSITORY" >> build.log
+        echo "Commit: $GITHUB_SHA" >> build.log
+        echo "Branch: $GITHUB_REF" >> build.log
+
+    - name: Install dependencies
+      run: |
+        set -o pipefail
+        python -m pip install --upgrade pip 2>&1 | tee -a build.log
+        pip install -r app/requirements.txt 2>&1 | tee -a build.log
+
+    - name: Run unit tests
+      run: |
+        set -o pipefail
+        python -m unittest discover -s app -p "test_*.py" 2>&1 | tee -a build.log
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./app
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/devops-app:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/devops-app:${{ github.sha }}
+
+    - name: Upload CI logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-logs
+        path: build.log
+        retention-days: 7
